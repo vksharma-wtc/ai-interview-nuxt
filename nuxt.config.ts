@@ -1,7 +1,11 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
 
-  modules: ['@nuxtjs/i18n', '@nuxtjs/tailwindcss'],
+  modules: ['@nuxtjs/i18n', '@nuxtjs/tailwindcss', 'nuxt-gtag'],
+
+   gtag: {
+    id: 'G-F311MP6MZG'
+  },
 
   app: {
     pageTransition: { name: 'page', mode: 'out-in' },
