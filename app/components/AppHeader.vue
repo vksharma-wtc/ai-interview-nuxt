@@ -24,7 +24,7 @@ function closeMenu() {
       </NuxtLink>
 
       <!-- Desktop Navigation -->
-      <nav class="desktop-nav">
+      <!-- <nav class="desktop-nav">
 
         <a href="#features">
           Features
@@ -39,10 +39,10 @@ function closeMenu() {
           Pricing
         </NuxtLink>
 
-      </nav>
+      </nav> -->
 
       <!-- Desktop Actions -->
-      <div class="desktop-actions">
+      <!-- <div class="desktop-actions">
 
         <NuxtLink
           to="/login"
@@ -59,10 +59,10 @@ function closeMenu() {
           <span>→</span>
         </NuxtLink>
 
-      </div>
+      </div> -->
 
       <!-- Mobile Menu Button -->
-      <button
+      <!-- <button
         type="button"
         class="menu-button"
         @click="mobileMenuOpen = !mobileMenuOpen"
@@ -71,12 +71,12 @@ function closeMenu() {
         <span></span>
         <span></span>
         <span></span>
-      </button>
+      </button> -->
 
     </div>
 
     <!-- Mobile Navigation -->
-    <div
+    <!-- <div
       v-if="mobileMenuOpen"
       class="mobile-menu"
     >
@@ -120,7 +120,7 @@ function closeMenu() {
         Get Started →
       </NuxtLink>
 
-    </div>
+    </div> -->
 
   </header>
 </template>
