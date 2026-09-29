@@ -38,10 +38,6 @@ onBeforeUnmount(() => {
 })
 
 const handleNextQuestion = () => {
-   stopRecording()
-
-  finalTranscript.value = ''
-  answer.value = ''
   nextQuestion()
 }
 
@@ -53,16 +49,15 @@ const finishInterview = () => {
 
 
 
-// Recording code
+// ===============================
+// Voice Recording
+// ===============================
 
 const isRecording = ref(false)
 const recognition = ref<any>(null)
 
-// Stores everything spoken across recognition sessions
 const finalTranscript = ref('')
-
-// Prevent automatic restart after user manually stops
-const manuallyStopped = ref(false)
+const interimTranscript = ref('')
 
 const toggleRecording = () => {
   if (isRecording.value) {
@@ -73,101 +68,130 @@ const toggleRecording = () => {
 }
 
 const startRecording = () => {
+  // Prevent multiple recognition sessions
+  if (isRecording.value) {
+    return
+  }
+
   const SpeechRecognition =
     window.SpeechRecognition ||
     window.webkitSpeechRecognition
 
   if (!SpeechRecognition) {
-    alert('Speech recognition is not supported in this browser.')
+    alert(
+      'Speech recognition is not supported in this browser. Please use Chrome.'
+    )
     return
   }
 
-  manuallyStopped.value = false
+  // Create a fresh recognition instance
+  const instance = new SpeechRecognition()
 
-  recognition.value = new SpeechRecognition()
+  recognition.value = instance
 
-  recognition.value.continuous = true
-  recognition.value.interimResults = true
-  recognition.value.lang = 'en-US'
+  finalTranscript.value = ''
+interimTranscript.value = ''
+answer.value = ''
 
-  recognition.value.onstart = () => {
+  // Configuration
+  instance.continuous = true
+  instance.interimResults = true
+  instance.lang = 'en-US'
+
+  // Start
+  instance.onstart = () => {
     isRecording.value = true
+
+    console.log('Speech recognition started')
   }
 
-  recognition.value.onresult = (event: any) => {
-    let interimTranscript = ''
+  // IMPORTANT:
+  // Handle final and interim results separately
+  instance.onresult = (event: any) => {
+    let interim = ''
 
     for (
       let i = event.resultIndex;
       i < event.results.length;
       i++
     ) {
-      const transcript = event.results[i][0].transcript
+      const result = event.results[i]
 
-      if (event.results[i].isFinal) {
-        // Save permanent speech
+      const transcript =
+        result[0].transcript
+
+      if (result.isFinal) {
+        // Only add FINAL speech once
         finalTranscript.value += transcript + ' '
       } else {
-        // Temporary speech while user is speaking
-        interimTranscript += transcript
+        // Temporary speech
+        interim += transcript
       }
     }
 
-    // Show previous speech + current speech
+    interimTranscript.value = interim
+
+    // Show final + currently recognized speech
     answer.value =
-      finalTranscript.value + interimTranscript
+      finalTranscript.value + interimTranscript.value
+
+    console.log('Final:', finalTranscript.value)
+    console.log('Interim:', interimTranscript.value)
+    console.log('Answer:', answer.value)
   }
 
-  recognition.value.onerror = (event: any) => {
+  instance.onerror = (event: any) => {
     console.error(
       'Speech recognition error:',
       event.error
     )
 
-    // Don't stop automatically for normal speech pauses
-    if (
-      event.error === 'no-speech' ||
-      event.error === 'aborted'
-    ) {
-      return
-    }
-
     isRecording.value = false
   }
 
-  recognition.value.onend = () => {
+  instance.onend = () => {
+    console.log('Speech recognition ended')
+
     isRecording.value = false
 
-    // Browser can automatically end recognition after a pause.
-    // Restart it while the user still wants to record.
-    if (!manuallyStopped.value) {
-      setTimeout(() => {
-        if (!manuallyStopped.value) {
-          try {
-            recognition.value.start()
-          } catch (error) {
-            console.log('Recognition restart skipped:', error)
-          }
-        }
-      }, 300)
-    }
+    // Do NOT automatically restart on mobile.
+    // Mobile browsers can create duplicate recognition events.
   }
 
   try {
-    recognition.value.start()
+    instance.start()
   } catch (error) {
-    console.error('Could not start speech recognition:', error)
+    console.error(
+      'Could not start speech recognition:',
+      error
+    )
+
+    isRecording.value = false
   }
 }
 
 const stopRecording = () => {
-  manuallyStopped.value = true
+  if (!recognition.value) {
+    return
+  }
 
-  if (recognition.value) {
+  try {
     recognition.value.stop()
+  } catch (error) {
+    console.error(
+      'Could not stop speech recognition:',
+      error
+    )
   }
 
   isRecording.value = false
+
+  // Make sure the final transcript is reflected
+  answer.value = finalTranscript.value.trim()
+
+  interimTranscript.value = ''
+
+  recognition.value = null
 }
 </script>
 
@@ -292,17 +316,24 @@ const stopRecording = () => {
 
           <button
             @click="toggleRecording"
-            :class="isRecording
-              ? 'bg-red-500 text-white'
-              : 'bg-white text-blue-600'"
+            :class="
+              isRecording
+                ? 'bg-red-500 text-white'
+                : 'bg-white text-blue-600'
+            "
             class="px-6 py-3 rounded-lg border"
           >
-            🎙
-            {{ isRecording ? 'Stop Recording' : 'Speak Answer' }}
+            <span v-if="isRecording">
+              🔴 Stop Recording
+            </span>
+
+            <span v-else>
+              🎙 Start Speaking
+            </span>
           </button>
 
           <span class="voice-info">
-            Voice input will be connected in the next step.
+            Speak naturally. Your answer will appear here.
           </span>
 
         </div>
