@@ -1,0 +1,38 @@
+name: React CI Pipeline
+
+# Trigger workflow when code is pushed to main
+on:
+  push:
+    branches:
+      - main
+
+  # Also run when a pull request is created
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build React Application
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Get repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Install Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Step 3: Install dependencies
+      - name: Install Dependencies
+        run: npm ci
+
+      # Step 4: Build React application
+      - name: Build Application
+        run: npm run build
